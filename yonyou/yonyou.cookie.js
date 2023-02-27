@@ -2,7 +2,7 @@
  * 获取友空间签到cookie
  *
  * hostname = ezone.yonyoucloud.com
- * ^https:\/\/ezone\.yonyoucloud\.com\/signin\/index\/webLogin url script-request-header https://raw.githubusercontent.com/chavyleung/scripts/master/citybox/citybox.cookie.js
+ * ^https:\/\/ezone\.yonyoucloud\.com\/signin\/index\/webLogin url script-request-header https://raw.githubusercontent.com/UncleDeron/Scripts/master/yonyou/yonyou.cookie.js
  *  * 10 0 * * * https://raw.githubusercontent.com/chavyleung/scripts/master/citybox/citybox.js, tag=友空间cookie
  */
 
@@ -11,6 +11,8 @@ const $ = new Env('友空间')
 !(async () => {
     const KEY = 'boxapp_diwork_har'
     const har = { url: $request.url, headers: $request.headers }
+    console.log($request)
+    console.log($request.body)
     $.setjson(har, KEY)
     $.msg($.name, '获取 【友空间】 账户成功')
 })()
