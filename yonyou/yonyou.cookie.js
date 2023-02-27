@@ -11,10 +11,16 @@ const $ = new Env('友空间')
 !(async () => {
     const KEY = 'boxapp_diwork_har'
     const har = { url: $request.url, headers: $request.headers }
-    console.log($request)
-    console.log($request.body)
-    $.setjson(har, KEY)
-    $.msg($.name, '获取 【友空间】 账户成功')
+    const body = $request.body
+    if ($request.headers) {
+        $.setjson(har, KEY)
+        $.msg($.name, '获取 【友空间】 账户 headers 成功')
+    }
+    if (body) {
+        $.setjson(har, 'boxapp_diwork_body')
+        $.msg($.name, '获取 【友空间】 账户 body 成功')
+    }
+
 })()
     .catch((e) => $.logErr(e))
     .finally(() => $.done())
