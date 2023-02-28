@@ -17,7 +17,7 @@ const $ = new Env('友空间')
         $.msg($.name, '获取 【友空间】 账户 headers 成功')
     }
     if (body) {
-        $.setjson(har, 'boxapp_diwork_body')
+        $.setjson(body, 'boxapp_diwork_body')
         $.msg($.name, '获取 【友空间】 账户 body 成功')
     }
 
