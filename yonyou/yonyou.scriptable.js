@@ -22,6 +22,7 @@ class Widget extends DmYY {
 
     headers = '';
     body = '';
+    workDay = true;
 
     init = async () => {
         try {
@@ -69,7 +70,11 @@ class Widget extends DmYY {
     getSignRecord = async () => {
         this.dataSource = []
         let cookie = await this.getCookie();
-        let signTime = getDateString()
+        let signTime = getDateString();
+        this.workDay = await this.isWorkDay(signTime.split(' ')[0]);
+        if (!this.workDay) {
+            return []
+        }
         const url = `https://ezone.yonyoucloud.com/signin/attentance/records?clientV=2-7.2.0-1-1&token=${this.cookie}&signTime=${encodeURIComponent(signTime)}&language=zhs`;
         const method = `GET`;
         const response = await this.$request.get(url, {
@@ -78,7 +83,8 @@ class Widget extends DmYY {
         try {
             const { code, data } = response;
             if (code === 0 && data.attentanceList.length > 0) {
-                let dataSource = data.attentanceList;
+                let count = data.attentanceList.length
+                let dataSource = count === 1 ? data.attentanceList : [data.attentanceList[count - 1], data.attentanceList[0]]; // 最多只显示最早和最晚的两条记录
                 dataSource.forEach((item) => {
                     item.signTimeFormat = new Date(item.signTime).toLocaleTimeString("zh-CN", {
                         hour: "2-digit",
@@ -90,7 +96,7 @@ class Widget extends DmYY {
                 });
                 return this.dataSource;
             } else {
-                throw 'cookie 失效，请重新获取';
+                return []
             }
         } catch (e) {
             console.log('❌错误信息2：' + e);
@@ -99,7 +105,12 @@ class Widget extends DmYY {
     };
 
     setListCell = async (cell, data, index) => {
-        const { signTimeFormat, signTime } = data;
+        const { signTimeFormat } = data;
+        const prefixMap = {
+            '-1': '',
+            '0': '上班：',
+            '1': '下班：'
+        }
         let body = cell.addStack();
 
         if (this.widgetFamily !== 'small') {
@@ -110,9 +121,8 @@ class Widget extends DmYY {
         }
 
         const textView = body.addStack();
-        textView.layoutVertically();
 
-        const prefix = index > -1 ? index + 1 + '. ' : ''
+        const prefix = prefixMap[index]
 
         const descText = textView.addText(`${prefix}${signTimeFormat}`);
         descText.font = this.widgetFamily.startsWith('accessory') ? Font.regularSystemFont(12) : Font.boldSystemFont(14);
@@ -120,20 +130,6 @@ class Widget extends DmYY {
         descText.lineLimit = 1;
 
         textView.addSpacer(3);
-
-        if (this.widgetFamily.startsWith('accessory')) return cell
-
-        const date = new Date();
-        date.setTime(Date.now()); //注意，这行是关键代码
-        let month = date.getMonth() + 1;
-        let day = date.getDate();
-        let hour = date.getHours();
-        let minute = date.getMinutes();
-
-        const timerText1 = textView.addText(`更新时间：${month}-${day} ${hour}:${minute}`);
-        timerText1.font = Font.lightSystemFont(10);
-        timerText1.textColor = this.widgetColor;
-        timerText1.lineLimit = 1;
 
         return cell;
     };
@@ -147,18 +143,34 @@ class Widget extends DmYY {
                 const data = dataSource[index];
                 let listItem = container.addStack();
                 await this.setListCell(listItem, data, index);
-                container.addSpacer(10);
+                container.addSpacer(8);
             }
         } else {
             let listItem = container.addStack();
+            let word = this.workDay ? '今天还没有签到哦~' : '今天休息~'
             await this.setListCell(listItem, {
-                signTimeFormat: '今天还没有签到哦~',
+                signTimeFormat: word,
                 signTime: Date.now()
             }, -1);
-            container.addSpacer(10);
+            container.addSpacer(8);
         }
 
         body.addSpacer();
+        const date = new Date();
+        date.setTime(Date.now()); //注意，这行是关键代码
+
+        const timerView = body.addStack()
+        const timerText = timerView.addText(date.toLocaleTimeString("zh-CN", {
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+        }));
+        timerText.font = Font.footnote();
+        timerText.textColor = this.widgetColor;
+        timerText.lineLimit = 1;
+        timerText.rightAlignText()
         return body;
     };
 
@@ -194,7 +206,7 @@ class Widget extends DmYY {
         } else {
             await this.renderHeader(header, this.logo, this.name, this.widgetColor);
         }
-        widget.addSpacer(10);
+        widget.addSpacer(16);
         if (this.widgetFamily.startsWith('accessory')) {
 
         } else if (this.widgetFamily === 'medium') {
@@ -223,6 +235,26 @@ class Widget extends DmYY {
         textItem.rightAlignText();
         return header;
     };
+
+    isWorkDay = async (date) => {
+        const url = `https://timor.tech/api/holiday/info/${date}`;
+        const method = 'GET';
+        const response = await this.$request.get(url, {
+            method,
+        })
+        try {
+            const { code, type } = response;
+            if (code === 0) {
+                return [0, 3].includes(type.type);
+            } else {
+                console.log('获取工作日信息失败')
+                return false
+            }
+        } catch (e) {
+            console.log('❌错误信息1：' + e);
+            return false;
+        }
+    }
 
     Run = (filename) => {
         if (config.runsInApp) {
