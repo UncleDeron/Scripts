@@ -1,19 +1,21 @@
 // ==UserScript==
-// @name         NGA移动端显示优化
-// @namespace    http://tampermonkey.net/
-// @version      0.1
-// @description  优化NGA论坛移动端显示效果
-// @author       UncleDeron
-// @match        https://bbs.nga.cn/*
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=nga.cn
-// @grant        GM_addStyle
+// @name            NGA移动端显示优化
+// @namespace       http://tampermonkey.net/
+// @version         0.1.1
+// @description     优化NGA论坛移动端显示效果
+// @author          UncleDeron
+// @match           https://bbs.nga.cn/*
+// @icon            https://www.google.com/s2/favicons?sz=64&domain=nga.cn
+// @updateURL       https://raw.githubusercontent.com/UncleDeron/Scripts/master/Tampermonkey/nga_mobile.js
+// @downloadURL     https://raw.githubusercontent.com/UncleDeron/Scripts/master/Tampermonkey/nga_mobile.js
+// @grant           GM_addStyle
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     // Your code here...
-    let css=`
+    let css = `
 #mainmenu .stdbtn .td:first-child {
     float: left;
     width: 50%;
